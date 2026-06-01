@@ -55,7 +55,6 @@ export default function LunchWheel({ items }) {
       <div className="wheel-card">
         <p className="eyebrow">Lunch roulette</p>
         <h1>午餐轉盤</h1>
-        <p className="muted">不用再問「今天吃什麼」，轉盤會直接從你目前的全部品項裡抽出一個。</p>
 
         <div className="wheel-stage">
           <div className="wheel-pointer" aria-hidden="true" />
