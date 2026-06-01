@@ -229,7 +229,7 @@ h2 {
   transform:
     rotate(var(--label-angle))
     translateY(-150px)
-    rotate(calc(-1 * var(--label-angle)));
+    rotate(calc(-1 * (var(--label-angle) + var(--wheel-rotation))));
   transform-origin: center;
 }
 
@@ -526,7 +526,7 @@ label {
     transform:
       rotate(var(--label-angle))
       translateY(-122px)
-      rotate(calc(-1 * var(--label-angle)));
+      rotate(calc(-1 * (var(--label-angle) + var(--wheel-rotation))));
     width: 76px;
     margin-left: -38px;
     font-size: 10px;

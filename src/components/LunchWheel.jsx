@@ -75,6 +75,7 @@ export default function LunchWheel({ items }) {
               background: wheelGradient,
               transform: `rotate(${rotation}deg)`,
               '--spin-duration': `${spinDuration}ms`,
+              '--wheel-rotation': `${rotation}deg`,
             }}
           >
             {wheelLabels.length === 0 ? (
@@ -123,7 +124,7 @@ export default function LunchWheel({ items }) {
             <p className="result-note">{selected.note}</p>
           </div>
         ) : (
-          <p className="muted">還沒抽。按下轉盤後，這裡會顯示今天要吃的午餐。</p>
+          <p className="muted">今天的午餐。</p>
         )}
 
         <div className="history-box">
