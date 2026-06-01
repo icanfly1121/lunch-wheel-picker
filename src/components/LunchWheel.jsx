@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 
 const wheelColors = ['#f2b84b', '#242933', '#78c6a3', '#303746', '#d98c5f', '#20242d'];
+const spinDuration = 3200;
 
 function buildWheelGradient(count) {
   if (count <= 0) {
@@ -8,10 +9,12 @@ function buildWheelGradient(count) {
   }
 
   const angle = 360 / count;
+
   const segments = Array.from({ length: count }, (_, index) => {
     const start = index * angle;
     const end = (index + 1) * angle;
     const color = wheelColors[index % wheelColors.length];
+
     return `${color} ${start}deg ${end}deg`;
   });
 
@@ -23,31 +26,38 @@ export default function LunchWheel({ items }) {
   const [isSpinning, setIsSpinning] = useState(false);
   const [displayText, setDisplayText] = useState('按下按鈕決定午餐');
   const [history, setHistory] = useState([]);
+  const [rotation, setRotation] = useState(0);
 
   const wheelLabels = useMemo(() => items.map((item) => item.name), [items]);
   const wheelGradient = useMemo(() => buildWheelGradient(wheelLabels.length), [wheelLabels.length]);
 
   function spinWheel() {
     if (items.length === 0 || isSpinning) return;
+
+    const selectedIndex = Math.floor(Math.random() * items.length);
+    const finalItem = items[selectedIndex];
+
+    const segmentAngle = 360 / items.length;
+    const selectedCenterAngle = selectedIndex * segmentAngle + segmentAngle / 2;
+
+    const targetRotation = 360 - selectedCenterAngle;
+    const extraRounds = 6 * 360;
+
+    const currentRotation = ((rotation % 360) + 360) % 360;
+    const delta = (targetRotation - currentRotation + 360) % 360;
+    const nextRotation = rotation + extraRounds + delta;
+
     setIsSpinning(true);
     setSelected(null);
+    setDisplayText('轉盤轉動中...');
+    setRotation(nextRotation);
 
-    let count = 0;
-    const maxCount = 24 + Math.floor(Math.random() * 10);
-    const timer = setInterval(() => {
-      const randomItem = items[Math.floor(Math.random() * items.length)];
-      setDisplayText(randomItem.name);
-      count += 1;
-
-      if (count >= maxCount) {
-        clearInterval(timer);
-        const finalItem = items[Math.floor(Math.random() * items.length)];
-        setDisplayText(finalItem.name);
-        setSelected(finalItem);
-        setHistory((prev) => [finalItem, ...prev.filter((item) => item.id !== finalItem.id)].slice(0, 5));
-        setIsSpinning(false);
-      }
-    }, 90);
+    setTimeout(() => {
+      setDisplayText(finalItem.name);
+      setSelected(finalItem);
+      setHistory((prev) => [finalItem, ...prev.filter((item) => item.id !== finalItem.id)].slice(0, 5));
+      setIsSpinning(false);
+    }, spinDuration);
   }
 
   return (
@@ -58,31 +68,38 @@ export default function LunchWheel({ items }) {
 
         <div className="wheel-stage">
           <div className="wheel-pointer" aria-hidden="true" />
+
           <div
-            className={`wheel-disk ${isSpinning ? 'spinning' : ''}`}
+            className="wheel-disk"
             style={{
-              '--slot-count': Math.max(wheelLabels.length, 1),
               background: wheelGradient,
+              transform: `rotate(${rotation}deg)`,
+              '--spin-duration': `${spinDuration}ms`,
             }}
           >
             {wheelLabels.length === 0 ? (
               <span className="empty-wheel-label">沒有品項</span>
             ) : (
-              wheelLabels.map((label, index) => (
-                <span
-                  key={`${label}-${index}`}
-                  style={{
-                    '--i': index,
-                    '--label-angle': `${(360 / wheelLabels.length) * index}deg`,
-                    '--half-angle': `${180 / wheelLabels.length}deg`,
-                  }}
-                  title={label}
-                >
-                  {label}
-                </span>
-              ))
+              wheelLabels.map((label, index) => {
+                const segmentAngle = 360 / wheelLabels.length;
+                const labelAngle = index * segmentAngle + segmentAngle / 2;
+
+                return (
+                  <span
+                    className="wheel-label"
+                    key={`${label}-${index}`}
+                    style={{
+                      '--label-angle': `${labelAngle}deg`,
+                    }}
+                    title={label}
+                  >
+                    {label}
+                  </span>
+                );
+              })
             )}
           </div>
+
           <div className="wheel-center">
             <strong>{displayText}</strong>
           </div>
@@ -91,15 +108,17 @@ export default function LunchWheel({ items }) {
         <button className="spin-btn" onClick={spinWheel} disabled={isSpinning || items.length === 0}>
           {isSpinning ? '轉盤轉動中...' : '開始選午餐'}
         </button>
-        <p className="muted small wheel-help">目前轉盤共有 {items.length} 個品項。新增或刪除品項後，轉盤會自動更新。</p>
       </div>
 
       <aside className="result-card">
         <h2>今天的結果</h2>
+
         {selected ? (
           <div className="result-detail">
             <p className="result-name">{selected.name}</p>
-            <p>{selected.shop} · {selected.category}</p>
+            <p>
+              {selected.shop} · {selected.category}
+            </p>
             <p>約 ${selected.price}</p>
             <p className="result-note">{selected.note}</p>
           </div>
@@ -109,10 +128,16 @@ export default function LunchWheel({ items }) {
 
         <div className="history-box">
           <h3>最近抽到</h3>
-          {history.length === 0 ? <p className="muted small">目前沒有紀錄</p> : (
+
+          {history.length === 0 ? (
+            <p className="muted small">目前沒有紀錄</p>
+          ) : (
             <ul>
               {history.map((item) => (
-                <li key={item.id}>{item.name}<span>{item.shop}</span></li>
+                <li key={item.id}>
+                  {item.name}
+                  <span>{item.shop}</span>
+                </li>
               ))}
             </ul>
           )}
